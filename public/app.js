@@ -1,8 +1,9 @@
-$(document).on("click", ".like", function() {
+$(document).on("click", ".submit", function() {
   var id=$(this).attr("value");
+  console.log(id);
   $.ajax({
-    method: "POST",
-    url: "/api/"+id,
+    method: "PUT",
+    url: "/all/"+id,
     data: {
       // Value taken from title input
       comment: $(".comment").val()
@@ -10,18 +11,18 @@ $(document).on("click", ".like", function() {
   }).then(function(data) {
       // Log the response
       // console.log(data);
-      alert("added successfully")
+      alert("added successfully");
     });
 
   });
 
-  $(document).on("click", ".delete", function() {
-    var id=$(this).attr("id");
-    $.ajax({
-      method: "DELET",
-      url: "/api/"+id
-    }).then(function(data) {
-      console.log(data)
-      });
+  // $(document).on("click", ".delete", function() {
+  //   var id=$(this).attr("id");
+  //   $.ajax({
+  //     method: "UPDATE",
+  //     url: "/all/"+id
+  //   }).then(function(data) {
+  //     console.log(data)
+  //     });
   
-    });
+  //   });

@@ -7,7 +7,7 @@ var cheerio = require("cheerio");
 
 var databaseUrl = "scraper";
 var collections = ["articles"];
-
+var ObjectId = require('mongodb').ObjectId; 
 
 var MONGODB_URI = process.env.MONGODB_URI || "mongodb://localhost/mongoHeadlines";
 
@@ -54,7 +54,7 @@ app.get("/scrape", function(req, res) {
     // Then, we load that into cheerio and save it to $ for a shorthand selector
     // console.log(response.data)
     var $ = cheerio.load(response.data);
-console.log($("div .esl82me1").each())
+// console.log($("div .esl82me1"))
     // Now, we grab every h2 within an article tag, and do the following:
     $("div .esl82me1").each(function(i, element) {
     //   // Save an empty result object
@@ -96,24 +96,33 @@ app.get("/all", function(req, res) {
   });
 });
 
-app.post("/api/:id", function(req, res) {
-    db.articles.updateOne({
-        "_id": req.params.id},
-        {$push:{comment:req.body.data}}
-        ).then(function(result) {
-      res.json(result);
-
-    });
+app.get("/all/:id", function(req, res) {
+    db.articles.find(ObjectId(req.params.id)
+    , function (err, result) {
+            res.json(result);
+        });
+ 
   });
+
+// app.post("/all/:id", function(req, res) {
+//     db.articles.find(ObjectId(req.params.id),
+//         {$push:{"comment":req.body.comment}}
+//         ,function(result) {
+//       res.json(result);
+
+//     });
+//   });
 
 // Route for grabbing a specific Article by id, populate it with it's note
-app.delete("/api/:id", function(req, res) {
-    db.articles.deleteOne({
-        "_id": req.params.id
-    }).then(function(result) {
-      res.json(result);
-    });
-  });
+// app.post("/api/:id", function(req, res) {
+//     db.articles.updateOne({
+//         "_id": req.params.id},
+//         {$set:{comment:" "}}
+//         ).then(function(result) {
+//       res.json(result);
+
+//     });
+//   });
 
 
 // Start the server
