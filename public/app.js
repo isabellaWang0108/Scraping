@@ -1,20 +1,9 @@
 $(document).on("click", ".submit", function() {
-  var id=$(this).attr("value");
-  console.log(id);
-  $.ajax({
-    method: "PUT",
-    url: "/all/"+id,
-    data: {
-      // Value taken from title input
-      comment: $(".comment").val()
-    }
-  }).then(function(data) {
-      // Log the response
-      // console.log(data);
-      alert("added successfully");
-    });
+   
+  $(".comment").append("<p>"+$(this).siblings().val()+"<button class='delete'>delet</button> </p>");
 
   });
+
 
   // $(document).on("click", ".delete", function() {
   //   var id=$(this).attr("id");

@@ -66,7 +66,8 @@ app.get("/scrape", function(req, res) {
     // if(title&&link){
         db.articles.insert({
             "title":title,
-            "link":link
+            "link":link,
+            "comment":" "
         },function(err,inserted){
             if(err){
                 console.log(err)
@@ -104,14 +105,16 @@ app.get("/all/:id", function(req, res) {
  
   });
 
-// app.post("/all/:id", function(req, res) {
-//     db.articles.find(ObjectId(req.params.id),
-//         {$push:{"comment":req.body.comment}}
-//         ,function(result) {
-//       res.json(result);
-
-//     });
-//   });
+app.put("/all/:id", function(req, res) {
+    console.log(req.body.title)
+    db.articles.update({"_id":req.params.id},
+        {$set:{"comment":req.body.comment}}
+        ,function(result) {
+      res.json(result);
+      console.log(result);
+// console.log(ObjectId(req.params.id));
+    });
+  });
 
 // Route for grabbing a specific Article by id, populate it with it's note
 // app.post("/api/:id", function(req, res) {
