@@ -1,0 +1,11 @@
+
+        {{#each article}}
+        <h2>{{title}}</h2>
+        <a href="{{link}}">{{link}}</a>
+        <textarea class="comment" ></textarea>
+        <button  class="submit" value="{{_id}}">submit</button>
+        <p>{{comment}}</p>
+        <button class="delete" id="{{_id}}">delete</button>
+        {{/each}}
+
+
