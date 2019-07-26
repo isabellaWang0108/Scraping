@@ -1,29 +1,21 @@
+$(document).on("click", ".card", function() {
+  var id=$(this).attr("value");
+    window.location.href = "/articles/" + id;
+  });
+
 $(document).on("click", ".submit", function() {
   var id=$(this).attr("value");
-  console.log();
+  console.log($(this).siblings().val())
   $.ajax({
-    method: "PUT",
-    url: "/all/"+id,
+    method: "POST",
+    url: "/articles/" + id,
     data: {
-      // Value taken from title input
-      comment: $(this).siblings().val(),
-      title:$("h2").val()
+      note: $(this).siblings().val()
     }
+  
   }).then(function(data) {
-      // Log the response
-console.log(data)
+      console.log(data)
       alert("added successfully");
     });
 
   });
-
-  // $(document).on("click", ".delete", function() {
-  //   var id=$(this).attr("id");
-  //   $.ajax({
-  //     method: "UPDATE",
-  //     url: "/all/"+id
-  //   }).then(function(data) {
-  //     console.log(data)
-  //     });
-  
-  //   });

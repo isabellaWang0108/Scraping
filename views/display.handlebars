@@ -1,14 +1,7 @@
+<button id="getContent">Get Articles</button>
 {{#each article}}
+<div class="card" value="{{_id}}">
 <h2 class="title">{{title}}</h2>
 <a class="link" href="{{link}}">{{link}}</a>
-<br>
-<div>
-        <textarea class="comment"></textarea>
-        <br>
-        <button class="submit" value="{{_id}}">submit</button>
-        <br>
 </div>
-<p>{{comment}} <button class="delete" id="{{_id}}">delete</button></p>
-
-
 {{/each}}

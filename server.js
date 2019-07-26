@@ -1,133 +1,125 @@
 var express = require("express");
 var mongoose = require("mongoose");
+var logger = require("morgan");
 var exphbs = require("express-handlebars");
-var mongojs=require("mongojs");
 var axios = require("axios");
 var cheerio = require("cheerio");
-var databaseUrl = "scraper";
-var collections = ["articles"];
-var ObjectId = require('mongodb').ObjectId; 
-var User = require("./userModel.js");
+var ObjectId = require('mongodb').ObjectId;
 
 var MONGODB_URI = process.env.MONGODB_URI || "mongodb://localhost/mongoHeadlines";
 
 mongoose.connect(MONGODB_URI);
 mongoose.connect("mongodb://localhost/userdb", { useNewUrlParser: true });
 
-// Our scraping tools
-// Axios is a promised-based http library, similar to jQuery's Ajax method
-// It works on the client and on the server
-
-// Hook mongojs configuration to the db variable
-
+var db = require("./models");
 
 var PORT = 3000;
 
-// Initialize Express
 var app = express();
 
-// Configure middleware
-
+app.use(logger("dev"));
 // Parse request body as JSON
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 // Make public a static folder
 app.use(express.static("public"));
 app.engine(
-    "handlebars",
-    exphbs({
-      defaultLayout: "main"
-    })
-  );
-  app.set("view engine", "handlebars");
+  "handlebars",
+  exphbs({
+    defaultLayout: "main"
+  })
+);
+app.set("view engine", "handlebars");
 
-// Connect to the Mongo DB
+
 mongoose.connect("mongodb://localhost/unit18Populater", { useNewUrlParser: true });
 
-// Routes
 
-// A GET route for scraping the echoJS website
-app.get("/scrape", function(req, res) {
-  // First, we grab the body of the html with axios
-  axios.get("https://www.nytimes.com").then(function(response) {
-    // Then, we load that into cheerio and save it to $ for a shorthand selector
-    // console.log(response.data)
+
+
+app.get("/", function (req, res) {
+  axios.get("https://www.nytimes.com").then(function (response) {
     var $ = cheerio.load(response.data);
-// console.log($("div .esl82me1"))
-    // Now, we grab every h2 within an article tag, and do the following:
-    $("div .esl82me1").each(function(i, element) {
-    //   // Save an empty result object
-      var title = $(element).children("h2").text();
-      var link = $(element).parent("a").attr("href");
-        console.log(title);
-        console.log("title");
-      // Create a new Article using the `result` object built from scraping
-    // if(title&&link){
-        db.articles.insert({
-            "title":title,
-            "link":link,
-            "comment":" "
-        },function(err,inserted){
-            if(err){
-                console.log(err)
-            }else{
-                console.log(inserted);
-                console.log("it's here")
-            }
+    $("div .esl82me1").each(function (i, element) {
+      var result = {};
+
+      result.title = $(element).children("h2").text();
+      result.link = $(element).parent("a").attr("href");
+
+      db.Article.create(result)
+        .then(function (dbArticle) {
+
+          console.log(dbArticle);
         })
-    // }
+        .catch(function (err) {
+          console.log(err);
+        });
     });
-
-    // Send a message to the client
-    res.send("Scrape Complete");
+    res.send("<a href='https://morning-beach-15286.herokuapp.com/articles'>See articles</a>");
   });
 });
 
-// Route for getting all Articles from the db
-app.get("/all", function(req, res) {
-  // TODO: Finish the route so it grabs all of the articles
-  db.articles.find({},function (err,result) {
-
-        res.render("display", {
-            article:result
-        });
-    
-    
-  });
+app.get("/articles", function (req, res) {
+  db.Article.find({})
+    .then(function (result) {
+      res.render("display", {
+        article: result
+      });
+    })
+    .catch(function (err) {
+      res.json(err);
+    });
 });
 
-app.get("/all/:id", function(req, res) {
-    db.articles.find({"_id":ObjectId(req.params.id)}
-    , function (err, result) {
-            res.send(result);
-        });
- 
-  });
-
-app.put("/all/:id", function(req, res) {
-    console.log(req.body.title)
-    db.articles.save({"_id":ObjectId(req.params.id)},
-        {$set:{"comment":req.body.comment}}
-        ,function(result) {
-      res.send(result);
-      console.log(result);
-// console.log(ObjectId(req.params.id));
+app.get("/articles/:id", function (req, res) {
+  // db.Article.find({ })
+  // console.log(req.params.id)
+  db.Article.find({ "_id": ObjectId(req.params.id) })
+    .populate("note")
+    .then(function (result) {
+      res.render("individual", result[0]);
+      // res.json(result)
+      console.log(result)
+    })
+    .catch(function (err) {
+      res.json(err);
     });
-  });
+});
+app.post("/articles/:id", function (req, res) {
+  // Create a new note and pass the req.body to the entry
+  db.Note.create(req.body)
+    .then(function (dbNote) {
+      return db.Article.findOneAndUpdate({ _id: ObjectId(req.params.id) }, { note: dbNote._id }, { new: true });
+    })
+    .then(function (dbArticle) {
+      // If we were able to successfully update an Article, send it back to the client
+      res.json(dbArticle);
+    })
+    .catch(function (err) {
+      // If an error occurred, send it to the client
+      res.json(err);
+    });
+});
 
-// Route for grabbing a specific Article by id, populate it with it's note
-// app.post("/api/:id", function(req, res) {
-//     db.articles.updateOne({
-//         "_id": req.params.id},
-//         {$set:{comment:" "}}
-//         ).then(function(result) {
-//       res.json(result);
+app.put("/articles/:id", function (req, res) {
+  db.Note.update(
+    { _id: ObjectId(req.params.id) }, { $set: { note: req.body.note } }, function (data) {
+      res.json(data)
+    }).catch(function (err) {
+      res.json(err);
+    });
+});
 
-//     });
-//   });
-
+app.delete("/articles/:id", function (req, res) {
+  db.Note.deletOne(
+    { _id: ObjectId(req.params.id) }, function (data) {
+      res.json(data)
+    }).catch(function (err) {
+      res.json(err);
+    });
+});
 
 // Start the server
-app.listen(PORT, function() {
+app.listen(PORT, function () {
   console.log("App running on port " + PORT + "!");
 });
