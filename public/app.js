@@ -1,9 +1,21 @@
 $(document).on("click", ".submit", function() {
-   
-  $(".comment").append("<p>"+$(this).siblings().val()+"<button class='delete'>delet</button> </p>");
+  var id=$(this).attr("value");
+  console.log();
+  $.ajax({
+    method: "PUT",
+    url: "/all/"+id,
+    data: {
+      // Value taken from title input
+      comment: $(this).siblings().val(),
+      title:$("h2").val()
+    }
+  }).then(function(data) {
+      // Log the response
+console.log(data)
+      alert("added successfully");
+    });
 
   });
-
 
   // $(document).on("click", ".delete", function() {
   //   var id=$(this).attr("id");

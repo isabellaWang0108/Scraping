@@ -4,23 +4,22 @@ var exphbs = require("express-handlebars");
 var mongojs=require("mongojs");
 var axios = require("axios");
 var cheerio = require("cheerio");
-
 var databaseUrl = "scraper";
 var collections = ["articles"];
 var ObjectId = require('mongodb').ObjectId; 
+var User = require("./userModel.js");
 
 var MONGODB_URI = process.env.MONGODB_URI || "mongodb://localhost/mongoHeadlines";
 
 mongoose.connect(MONGODB_URI);
+mongoose.connect("mongodb://localhost/userdb", { useNewUrlParser: true });
+
 // Our scraping tools
 // Axios is a promised-based http library, similar to jQuery's Ajax method
 // It works on the client and on the server
 
 // Hook mongojs configuration to the db variable
-var db = mongojs(databaseUrl, collections);
-db.on("error", function(error) {
-  console.log("Database Error:", error);
-});
+
 
 var PORT = 3000;
 
@@ -98,19 +97,19 @@ app.get("/all", function(req, res) {
 });
 
 app.get("/all/:id", function(req, res) {
-    db.articles.find(ObjectId(req.params.id)
+    db.articles.find({"_id":ObjectId(req.params.id)}
     , function (err, result) {
-            res.json(result);
+            res.send(result);
         });
  
   });
 
 app.put("/all/:id", function(req, res) {
     console.log(req.body.title)
-    db.articles.update({"_id":req.params.id},
+    db.articles.save({"_id":ObjectId(req.params.id)},
         {$set:{"comment":req.body.comment}}
         ,function(result) {
-      res.json(result);
+      res.send(result);
       console.log(result);
 // console.log(ObjectId(req.params.id));
     });
